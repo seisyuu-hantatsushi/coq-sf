@@ -191,12 +191,21 @@ Fixpoint exp (base power : nat): nat :=
 
 Fixpoint factorial (n:nat) : nat :=
   match n with
-    | O => O
+    | O => S O
     | S n' => mult n (factorial n')
   end.
 
 Example test_factorial1: (factorial 3) = 6.
+Proof.
+  simpl.
+  reflexivity.
+Qed.
+
 Example test_factorial2: (factorial 5) = (mult 10 12).
+Proof.
+  simpl.
+  reflexivity.
+Qed.
 
 Notation "x + y" := (plus  x y) (at level 50, left associativity) : nat_scope.
 Notation "x - y" := (minus x y) (at level 50, left associativity) : nat_scope.
@@ -215,3 +224,185 @@ Fixpoint beq_nat (n m:nat) : bool :=
                 | S m' => beq_nat n' m'
               end
   end.
+
+Fixpoint ble_nat (n m : nat) : bool :=
+  match n with
+    | O => true
+    | S n' =>
+      match m with
+          | O => false
+          | S m' => ble_nat n' m'
+      end
+  end.
+
+Example test_ble_nat1:             (ble_nat 2 2) = true.
+Proof. simpl. reflexivity.  Qed.
+Example test_ble_nat2:             (ble_nat 2 4) = true.
+Proof. simpl. reflexivity.  Qed.
+Example test_ble_nat3:             (ble_nat 4 2) = false.
+Proof. simpl. reflexivity.  Qed.
+
+Definition blt_nat (n m : nat) : bool :=
+  andb (ble_nat n m) (negb (beq_nat n m)).
+
+Example test_blt_nat1: (blt_nat 2 2) = false.
+Proof. simpl. reflexivity. Qed.
+
+Example test_blt_nat2: (blt_nat 2 4) = true.
+Proof. simpl. reflexivity. Qed.
+
+Example test_blt_nat3: (blt_nat 4 2) = false.
+Proof. simpl. reflexivity. Qed.
+
+Theorem plus_O_n: forall n:nat, 0 + n = n.
+Proof. simpl. reflexivity. Qed.
+
+Eval simpl in (forall n:nat, n + 0 = n).
+
+Eval simpl in (forall n:nat, 0 + n = n).
+
+Theorem plus_O_n'' : forall n:nat, 0+n=n.
+Proof.
+  intros n. reflexivity. Qed.
+
+Theorem plus_1_l : forall n:nat, 1 + n = S n.
+Proof.
+  intros n. reflexivity.  Qed.
+
+Theorem mult_0_l : forall n:nat, 0 * n = 0.
+Proof.
+  intros n. reflexivity.  Qed.
+
+Theorem plus_id_example : forall n m:nat,
+  n = m ->
+  n + n = m + m.
+Proof.
+  intros n m.
+  intros H.
+  rewrite -> H.
+  reflexivity.
+Qed.
+
+Theorem plus_id_exercise :
+  forall n m o:nat, n = m -> m = o -> n + m = m + o.
+Proof.
+  intros n m o.
+  intros H1 H2.
+  rewrite -> H1.
+  rewrite <- H2.
+  reflexivity.
+Qed.
+
+Theorem mult_0_l_plus:
+  forall n m:nat, (0+n)*m = n*m.
+Proof.
+  intros n m.
+  rewrite -> plus_O_n.
+  reflexivity.
+Qed.
+
+Theorem mult_1_plus:
+  forall n m:nat, (1+n)*m = m + (n*m).
+  intros n m.
+  rewrite -> plus_1_l.
+  simpl.
+  reflexivity.
+Qed.
+
+Theorem plus_1_neq_0 :
+  forall n : nat, beq_nat (n + 1) 0 = false.
+Proof.
+  intro n.
+  destruct n as [|n'].
+  reflexivity.
+  reflexivity.
+Qed.
+
+Theorem negb_involutive : 
+  forall b : bool, negb (negb b) = b.
+Proof.
+  intros b.
+  destruct b.
+  reflexivity.
+  reflexivity.
+Qed.
+
+Theorem zero_nbeq_plus_1:
+  forall n : nat, beq_nat 0 (n+1) = false.
+Proof.
+  intros n.
+  destruct n as [|n'].
+  reflexivity.
+  reflexivity.
+Qed.
+
+Require String. Open Scope string_scope.
+
+Ltac move_to_top x :=
+  match reverse goal with
+  | H : _ |- _ => try move x after H
+  end.
+
+Tactic Notation "assert_eq" ident(x) constr(v) :=
+  let H := fresh in
+  assert (x = v) as H by reflexivity;
+  clear H.
+
+Tactic Notation "Case_aux" ident(x) constr(name) :=
+  first [
+    set (x := name); move_to_top x
+  | assert_eq x name; move_to_top x
+  | fail 1 "because we are working on a different case" ].
+
+Tactic Notation "Case" constr(name) := Case_aux Case name.
+Tactic Notation "SCase" constr(name) := Case_aux SCase name.
+Tactic Notation "SSCase" constr(name) := Case_aux SSCase name.
+Tactic Notation "SSSCase" constr(name) := Case_aux SSSCase name.
+Tactic Notation "SSSSCase" constr(name) := Case_aux SSSSCase name.
+Tactic Notation "SSSSSCase" constr(name) := Case_aux SSSSSCase name.
+Tactic Notation "SSSSSSCase" constr(name) := Case_aux SSSSSSCase name.
+Tactic Notation "SSSSSSSCase" constr(name) := Case_aux SSSSSSSCase name.
+
+Theorem andb_true_elim1:
+  forall b c : bool, andb b c = true -> b = true.
+  intros b c H.
+  destruct b.
+  Case "b = true".
+  reflexivity.
+  Case "b = false".
+  rewrite <- H.
+  reflexivity.
+Qed.
+
+Theorem andb_true_elim2:
+  forall b c : bool, andb b c = true -> c = true.
+Proof.
+  intros b c H.
+  destruct c.
+  Case "c = true".
+  reflexivity.
+  Case "c = false".
+  rewrite <- H.
+  destruct b.
+  SCase "b = true".
+  reflexivity.
+  SCase "b = false".
+  reflexivity.
+Qed.
+
+Theorem plus_0_r :
+  forall n:nat, n+0=n.
+Proof.
+  intros n.
+  induction n as [|n'].
+  Case "n = 0". reflexivity.
+  Case "n = S n'". simpl. rewrite -> IHn'. reflexivity.
+Qed.
+
+Theorem minus_diag :
+  forall n, minus n n = 0.
+Proof.
+  intros n. induction n as [|n'].
+  Case "n = 0". reflexivity.
+  Case "n = S n'". simpl. rewrite -> IHn'. reflexivity.
+Qed.
