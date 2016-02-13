@@ -628,3 +628,125 @@ Proof.
   rewrite -> plus_0_r.
   reflexivity.
 Qed.
+
+Theorem all3_spec : forall b c : bool,
+    orb
+      (andb b c)
+      (orb (negb b)
+               (negb c))
+  = true.
+Proof.
+  intros b c.
+  destruct b as [|b'].
+  Case "b = true".
+  destruct c as [|c'].
+  SCase "c = true".
+  simpl.
+  reflexivity.
+  SCase "c = false".
+  simpl.
+  reflexivity.
+  Case "b = false".
+  destruct c as [|c'].
+  SCase "c = true".
+  simpl.
+  reflexivity.
+  SCase "c = false".
+  simpl.
+  reflexivity.
+Qed.
+
+Theorem mult_plus_distr_r : forall n m p : nat,
+  (n + m) * p = (n * p) + (m * p).
+Proof.
+  intros n m p.
+  induction n as [|n'].
+  Case "n = 0".
+  simpl.
+  reflexivity.
+  Case "n = S n'".
+  simpl.
+  rewrite -> IHn'.
+  rewrite -> plus_assoc.
+  reflexivity.
+Qed.
+
+Theorem mult_assoc : forall n m p : nat,
+  n * (m * p) = (n * m) * p.
+Proof.
+  intros n m p.
+  induction n as [|n'].
+  Case "n = 0".
+  simpl.
+  reflexivity.
+  Case "n = S n'".
+  simpl.
+  rewrite -> IHn'.
+  rewrite -> mult_plus_distr_r.
+  reflexivity.
+Qed.
+
+Theorem plus_swap' :
+  forall n m p : nat, n + (m + p) = m + (n + p).
+Proof.
+  intros n m p.
+  rewrite -> plus_assoc.
+  rewrite -> plus_assoc.
+  replace (m + n) with (n + m).
+  reflexivity.
+  rewrite -> plus_comm.
+  reflexivity.
+Qed.
+
+(** binary **)
+
+Module Binary.
+
+  Inductive bin : Type :=
+  | Zero  : bin
+  | Twice : bin -> bin
+  | TwicePlusOne : bin -> bin.
+
+Fixpoint inc (b:bin) : bin :=
+  match b with
+      | Zero => TwicePlusOne Zero
+      | Twice b' => TwicePlusOne b'
+      | TwicePlusOne b' => Twice (inc b')
+  end.
+
+Fixpoint bin_to_nat (b:bin) : nat :=
+  match b with
+      | Zero => O
+      | Twice b' => 2 * (bin_to_nat b')
+      | TwicePlusOne b' => 1 + 2 * (bin_to_nat b')
+  end.
+
+Check inc. 
+Eval simpl in (inc Zero).
+Eval simpl in (inc (inc Zero)).
+Eval simpl in bin_to_nat (inc (inc (inc Zero))).
+Eval simpl in (inc (inc (inc (inc Zero)))).
+Eval simpl in bin_to_nat (inc (inc (inc (inc Zero)))).
+
+Theorem bin_nat_comm: 
+  forall b:bin, bin_to_nat (inc b) = 1 + (bin_to_nat b).
+Proof.
+  intros b.
+  induction b as [|b1|b2].
+  Case "b = Zero".
+  simpl.
+  reflexivity.
+  Case "b = Twice b'".
+  simpl.
+  reflexivity.
+  Case "b = TwicePlusOne b'".
+  simpl.
+  rewrite -> plus_0_r.
+  rewrite -> plus_0_r.
+  rewrite -> IHb2.
+  simpl.
+  rewrite <- plus_n_Sm.
+  reflexivity.
+Qed.
+
+End Binary.
