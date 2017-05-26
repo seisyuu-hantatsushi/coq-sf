@@ -749,4 +749,33 @@ Proof.
   reflexivity.
 Qed.
 
+Fixpoint nat_to_bin (n:nat) : bin:=
+  match n with
+    | O => Zero
+    | S n' => inc (nat_to_bin n')
+  end.
+
+Eval simpl in (inc Zero).
+Eval simpl in nat_to_bin 1.
+Eval simpl in (inc (inc Zero)).
+Eval simpl in nat_to_bin 2.
+Eval simpl in (inc (inc (inc Zero))).
+Eval simpl in bin_to_nat (nat_to_bin 3).
+
+Theorem nat_bin_comm:
+  forall n:nat, bin_to_nat (nat_to_bin n) = n.
+Proof.
+  intros n.
+  induction n as [|n'].
+  Case "n = 0".
+  simpl.
+  reflexivity.
+  Case "n = S n'".
+  simpl.
+  rewrite -> bin_nat_comm.
+  simpl.
+  rewrite -> IHn'.
+  reflexivity.
+Qed.
+
 End Binary.
