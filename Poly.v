@@ -1,5 +1,5 @@
 Require Export List.
-        
+
 Inductive boollist : Type :=
 | bool_nil : boollist
 | bool_cons : bool -> boollist -> boollist.
@@ -989,3 +989,5 @@ Proof.
   rewrite <- IHl'.
   reflexivity.
 Qed.
+
+
