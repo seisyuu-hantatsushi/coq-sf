@@ -152,3 +152,309 @@ Proof.
   simpl. intros n IHn. apply eq_remove_S. apply IHn.
 Qed.
 
+Inductive yesno: Type :=
+| yes: yesno
+| no: yesno.
+
+Check yesno_ind.
+
+Inductive rgb : Type :=
+  | red : rgb
+  | green : rgb
+  | blue : rgb.
+Check rgb_ind.
+
+Inductive natlist: Type :=
+| nnil : natlist
+| ncons : nat -> natlist -> natlist.
+
+Check natlist_ind.
+
+Inductive natlist1 : Type :=
+| nnil1 : natlist1
+| ncons1 : natlist1 -> nat -> natlist1.
+
+Check natlist1_ind.
+
+Inductive ExSet : Type :=
+| con1 : forall b:bool, ExSet
+| con2 : nat -> ExSet -> ExSet.
+
+Check ExSet_ind.
+
+Inductive tree (X:Type) : Type :=
+| leaf : X -> tree X
+| node : tree X -> tree X -> tree X.
+
+Check tree_ind.
+
+Inductive mytype (X:Type) : Type :=
+| constr1: X -> mytype X
+| constr2: nat -> mytype X
+| constr3: mytype X -> nat -> mytype X.
+
+Check mytype_ind.
+
+Inductive foo (X Y:Type) : Type :=
+| bar: X -> foo X Y
+| baz: Y -> foo X Y
+| quux: (nat -> foo X Y) -> foo X Y.
+
+Check foo_ind.
+
+Inductive foo' (X:Type) : Type :=
+| C1 : list X -> foo' X -> foo' X
+| C2 : foo' X.
+
+Check foo'_ind.
+
+Definition P_m0r (n:nat) : Prop :=
+  n * 0 = 0.
+
+Definition P_m0r': nat -> Prop :=
+  fun n => n * 0 = 0.
+
+Theorem mult_0_r'' :
+  forall n:nat, P_m0r n.
+Proof.
+  apply nat_ind.
+  Case "n = 0". reflexivity.
+  Case "n = S n".
+  unfold P_m0r. simpl. intros n' IHn'.
+  apply IHn'.
+Qed.
+
+Inductive ev : nat -> Prop :=
+| ev_0: ev 0
+| ev_SS: forall n:nat, ev n -> ev (S (S n)).
+
+Theorem four_ev':
+  ev 4.
+Proof.
+  apply ev_SS.
+  apply ev_SS.
+  apply ev_0.
+Qed.
+
+Print four_ev'.
+
+Definition four_ev: ev 4 := ev_SS 2 (ev_SS 0 ev_0).
+
+Theorem ev_plus4':
+  forall n, ev n -> ev (4 + n).
+Proof.
+  apply ev_ind.
+ (* Case "n=0". *)
+  simpl. apply four_ev.
+  (* Case "n = S n". *)
+  simpl.
+  intros.
+  apply ev_SS.
+  apply H0.
+Qed.
+
+Print ev_plus4'.
+
+Definition ev_plus4 : forall n, ev n -> ev (4 + n) :=
+  ev_ind (fun n : nat => ev (4 + n)) four_ev
+         (fun (n : nat) (_ : ev n) (H0 : ev (S (S (S (S n))))) =>
+            ev_SS (S (S (S (S n)))) H0).
+
+Theorem double_even: forall n, ev (double n).
+Proof.
+  intros.
+  induction n.
+  simpl. apply ev_0.
+  simpl. apply ev_SS. apply IHn.
+Qed.
+
+Print double_even.
+
+Theorem ev_minus2:
+  forall n, ev n -> ev (pred (pred n)).
+Proof.
+  intros n E.
+  destruct E as [| n' E'].
+  Case "E = ev_0". simpl. apply ev_0.
+  Case "E = ev_SS n' E'". simpl. apply E'. Qed.
+
+Theorem ev_minus2_n:
+  forall n, ev n -> ev (pred (pred n)).
+  intros n E.
+  destruct n as [| n'].
+  Case "E = n". simpl. apply E.
+  Case "E = S n". simpl.
+  Restart.
+  intros n E.
+  destruct E as [| n' E'].
+  Case "E = ev_0". simpl. apply ev_0.
+  Case "E = ev_SS n' E'". simpl. apply E'. Qed.
+
+Theorem ev_even:
+  forall n, ev n -> even n.
+Proof.
+  intros n E. induction E as [| n' E'].
+  Case "E = ev_0".
+  unfold even. reflexivity.
+  Case "E = ev_SS n' E'".
+  unfold even. apply IHE'.
+Qed.
+
+Theorem ev_even_n:
+  forall n, ev n -> even n.
+Proof.
+  intros n E. induction n as [| n' ].
+  unfold even. simpl. reflexivity.
+  unfold even.
+Admitted.
+
+Theorem ev_sum:
+  forall n m, ev n -> ev m -> ev (n+m).
+  intros n m En Em.
+  induction En as [|n' En'].
+  simpl. apply Em.
+  simpl. apply ev_SS. apply IHEn'.
+Qed.
+
+Theorem SSev_ev_firsttry:
+  forall n, ev (S (S n)) -> ev n.
+Proof.
+  intros n E.
+  destruct E as [| n' E'].
+Admitted.
+
+Theorem SSev_even:
+  forall n, ev (S (S n)) -> ev n.
+  intros n E.
+  inversion E as [| n' E'].
+  apply E'.
+Qed.
+
+Theorem SSSSev_even:
+  forall n, ev (S (S (S (S n)))) -> ev n.
+  intros n E.
+  inversion E as [| n' E'].
+  apply SSev_even.
+  apply E'.
+Qed.
+
+Theorem even5_nonsense :
+  ev 5 -> 2 + 2 = 9.
+Proof.
+  intros.
+  inversion H as [| n' H'].
+  inversion H'.
+  inversion H2.
+Qed.
+
+Theorem ev_minus2':
+  forall n, ev n -> ev (pred (pred n)).
+Proof.
+  intros n E. inversion E as [| n' E'].
+  Case "E = ev_0". simpl. apply ev_0.
+  Case "E = ev_SS n' E'". simpl. apply E'.
+Qed.
+
+Theorem ev_ev_even:
+  forall n m, ev (n+m) -> ev n -> ev m.
+Proof.
+  intros n m Hn Hm.
+  induction Hm.
+  apply Hn.
+  apply IHHm.
+  apply SSev_even.
+  apply Hn.
+Qed.
+
+Theorem ev_plus_plus:
+  forall n m p, ev (n + m) -> ev (n + p) -> ev (m + p).
+Proof.
+  intros n m p H.
+  apply ev_ev_even.
+  rewrite plus_swap. rewrite <- plus_assoc.
+  rewrite plus_swap. rewrite plus_assoc.
+  apply ev_sum. apply H.
+  SearchAbout (_ + _).
+  rewrite <- double_plus. apply double_even.
+Qed.
+
+Inductive MyProp : nat -> Prop :=
+| MyProp1: MyProp 4
+| MyProp2: forall n:nat, MyProp n -> MyProp (4 + n)
+| MyProp3: forall n:nat, MyProp (2 + n) -> MyProp n.
+
+Theorem MyProp_ten : MyProp 10.
+Proof.
+  apply MyProp3.
+  simpl. assert(12=4+8) as H12.
+  Case "Proof of assertion.". reflexivity.
+  rewrite H12.
+  apply MyProp2.
+  assert(8=4+4) as H8.
+  Case "Proof of assertion.". reflexivity.
+  rewrite H8.
+  apply MyProp2.
+  apply MyProp1.
+Qed.
+
+Theorem MyProp_0: MyProp 0.
+Proof.
+  apply MyProp3. simpl.
+  apply MyProp3. simpl.
+  apply MyProp1.
+Qed.
+
+Theorem MyProp_plustwo :
+  forall n:nat, MyProp n -> MyProp (S (S n)).
+Proof.
+  intros.
+  rewrite <- plus_one_r'.
+  rewrite <- plus_one_r'.
+  rewrite <- plus_assoc.
+  simpl.
+  rewrite <- plus_comm.
+  apply MyProp3.
+  rewrite plus_assoc.
+  rewrite <- plus_comm.
+  simpl.
+  rewrite <- plus_comm.
+  apply MyProp2.
+  apply H.
+Qed.
+
+Theorem MyProp_ev :
+  forall n:nat, ev n -> MyProp n.
+Proof.
+  intros n E.
+  induction E as [|n' E'].
+  Case "E = ev_0".
+  apply MyProp_0.
+  Case "E = ev_SS n' E'".
+  apply MyProp_plustwo.
+  apply IHE'.
+Qed.
+
+(*
+非形式的な証明.
+定理: 任意の自然数nにおいて,ev nならばMyProp nが成り立つ
+証明:
+   n = 0のとき,MyProp 0は補題MyProp_0で成立
+   n = S (S n')のとき,MyProp n'が成立すると仮定すると,
+   MyProp  S (S n')は,MyProp_plustwoが成立するので,帰納法により定理は成立する.
+ *)
+
+Theorem ev_MyProp:
+  forall n:nat, MyProp n -> ev n.
+Proof.
+  intros n P.
+  induction P.
+  Case "n = 4".
+  apply four_ev.
+  Case "n = 4 + n'".
+  apply ev_plus4.
+  apply IHP.
+  Case "n = 2 + n'".
+  simpl in IHP.
+  apply SSev_even.
+  apply IHP.
+Qed.
