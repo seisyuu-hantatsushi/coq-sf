@@ -458,3 +458,9 @@ Proof.
   apply SSev_even.
   apply IHP.
 Qed.
+
+Theorem plus_assoc' :
+  forall n m p: nat, n+(m+p)=(n+m)+p.
+Proof.
+  intros n m p.
+  
