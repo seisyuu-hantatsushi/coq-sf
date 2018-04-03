@@ -205,7 +205,7 @@ Fixpoint sndlist {X Y:Type} (l : list (X*Y)) : (list Y)
 
 Fixpoint split {X Y:Type} (l : list (X*Y)) : (list X) * (list Y)
   := (fstlist l , sndlist l).
-                     
+
 Example test_split:
   split [(1,false),(2,false)] = ([1,2],[false,false]).
 Proof.
@@ -401,7 +401,7 @@ Lemma snoc_map:
     rewrite -> IHl'.
     reflexivity.
 Qed.
-    
+
 Theorem map_rev :
   forall (X Y : Type) (f : X -> Y) (l : list X),
     map f (rev l) = rev (map f l).
@@ -989,5 +989,4 @@ Proof.
   rewrite <- IHl'.
   reflexivity.
 Qed.
-
 

@@ -482,7 +482,7 @@ Module NatList.
     reflexivity.
   Qed.
 
-  Theorem scon_append:
+  Theorem snoc_append:
     forall l:natlist, forall n:nat, snoc l n = l ++ [n].
   Proof.
     intros l n.
@@ -508,8 +508,8 @@ Module NatList.
     Case "l1=n1::l1'".
     simpl.
     rewrite -> IHl1'.
-    rewrite -> scon_append.
-    rewrite -> scon_append.
+    rewrite -> snoc_append.
+    rewrite -> snoc_append.
     rewrite -> app_assoc.
     reflexivity.
   Qed.

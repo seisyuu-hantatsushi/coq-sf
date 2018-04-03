@@ -463,4 +463,200 @@ Theorem plus_assoc' :
   forall n m p: nat, n+(m+p)=(n+m)+p.
 Proof.
   intros n m p.
-  
+  induction n as [|n'].
+  Case "n=0".
+  simpl. reflexivity.
+  Case "n=S n'".
+  simpl. rewrite -> IHn'. reflexivity.
+Qed.
+
+Theorem plus_comm' :
+  forall n m : nat, n + m = m + n.
+Proof.
+  induction n as [|n'].
+  Case "n=0".
+  intro m. rewrite plus_0_r. simpl. reflexivity.
+  Case "n=S n'".
+  intro m. simpl.
+  rewrite -> IHn'. rewrite <- plus_n_Sm. reflexivity.
+Qed.
+
+Theorem plus_comm'' :
+  forall n m: nat, n + m = m + n.
+  induction m as [| m'].
+  Case "m = 0".
+  simpl. rewrite -> plus_0_r. reflexivity.
+  Case "m = S m".
+  simpl. rewrite <- IHm'. rewrite <- plus_n_Sm. reflexivity.
+Qed.
+
+Check ev_ind.
+
+Theorem ev_even':
+  forall n:nat,ev n -> even n.
+Proof.
+  apply ev_ind.
+  Case "ev_0". unfold even. reflexivity.
+  Case "ev_SS". intros n' E' IHE'. unfold even. apply IHE'.
+Qed.
+
+Check list_ind.
+Check MyProp_ind.
+
+Theorem ev_MyProp':
+  forall n:nat, MyProp n -> ev n.
+Proof.
+  apply MyProp_ind.
+  Case "n = 4".
+  apply four_ev.
+  Case "n = 4 + n'".
+  intros.
+  apply ev_plus4.
+  apply H0.
+  Case "n = 2 + n".
+  intros.
+  simpl in H0.
+  apply SSev_even.
+  apply H0.
+Qed.
+
+Print ev_plus4'.
+
+Print MyProp_ev.
+
+Definition MyProp_ev' :
+  forall n:nat, ev n -> MyProp n :=
+  fun (n : nat) (E : ev n) =>
+    ev_ind (fun n : nat => MyProp n) MyProp_0
+           (fun (n' : nat) (_ : ev n') (H : MyProp n') => MyProp_plustwo n' H) n E.
+
+Print ev_MyProp.
+Print MyProp_ind.
+
+Definition ev_MyProp'' :
+  forall n : nat, MyProp n -> ev n :=
+  fun (n : nat) (P : MyProp n) =>
+    MyProp_ind (fun m : nat => ev m) four_ev
+               (fun (m : nat) (_ : MyProp m) (H : ev m) => ev_plus4 m H)
+               (fun (m : nat) (_ : MyProp (2 + m)) (H : ev (2 + m)) => SSev_even m H) n P.
+
+Module Test.
+Inductive foo (X : Set) (Y : Set) : Set :=
+     | foo1 : X -> foo X Y
+     | foo2 : Y -> foo X Y
+     | foo3 : foo X Y -> foo X Y.
+Check foo_ind.
+End Test.
+
+
+Inductive pal {X :Type}: list X -> Prop :=
+| c0 : pal []
+| c1 : forall n:X, pal [n]
+| c2 : forall (n:X) (l:list X), pal l -> pal (n :: (snoc l n)).
+
+Theorem pal_ref :
+  forall {X:Type} (l:list X), pal (l ++ rev l).
+  intros.
+  induction l.
+  Case "l = []".
+  simpl.
+  apply c0.
+  Case "l = x::l'".
+  simpl.
+  rewrite <- snoc_with_append.
+  apply c2.
+  apply IHl.
+Qed.
+
+Lemma rev_involutive:
+  forall {X:Type} (l:list X), rev (rev l) = l.
+Proof.
+  intros.
+  induction l as [| n l'].
+  Case "l=[]".
+  simpl.
+  reflexivity.
+  Case "l=[n::l]".
+  assert (H1:forall {X:Type} (n: X) (l:list X), rev (snoc l n) = n::rev l).
+  intros.
+  induction l as [|n0' l0'].
+  SCase "l0=[]".
+  simpl.
+  reflexivity.
+  SCase "l0=n0::l0'".
+  simpl.
+  rewrite -> IHl0'.
+  simpl.
+  reflexivity.
+  simpl.
+  rewrite->H1.
+  rewrite->IHl'.
+  reflexivity.
+Qed.
+
+Theorem pal_id_rev:
+  forall {X:Type} (l:list X), pal l -> l = rev l.
+Proof.
+  intros.
+  induction H.
+  Case "l = []".
+  simpl.
+  reflexivity.
+  Case "l = [n]".
+  simpl.
+  reflexivity.
+  Case "l = [n::l::n]".
+  rewrite IHpal.
+  simpl.
+  rewrite rev_snoc.
+  simpl.
+  rewrite -> rev_involutive.
+  rewrite <- IHpal.
+  reflexivity.
+Qed.
+
+Inductive subseq : list nat -> list nat -> Prop :=
+| subseq_c1 : forall l, subseq [] l
+| subseq_c2 : forall sl l n m, subseq (n::sl) (m::l) -> subseq (n::sl) l
+| subseq_c3 : forall sl l n, subseq (n::sl) (n::l) -> subseq sl l.
+
+
+
+Module Foo_Ind_principle.
+  Inductive foo (X: Set) (Y: Set) : Set :=
+  | foo1 : X -> foo X Y
+  | foo2 : Y -> foo X Y
+  | foo3 : foo X Y -> foo X Y.
+  Check foo_ind.
+End Foo_Ind_principle.
+
+Inductive R : nat -> list nat -> Prop :=
+| c1 : R 0 []
+| c2 : forall n l, R n l -> R (S n) (n :: l)
+| c3 : forall n l, R (S n) l -> R n l.
+
+Check R.
+Check (R 1 [1,2,1,0]).
+Check (R 2 [1,0]).
+Check (R 6 [3,2,1,0]).
+
+Theorem r_1_list_1_2_1_0:
+  R 1 [1,2,1,0].
+Proof.
+  apply c3.
+  apply c2.
+  apply c3.
+  apply c3.
+  apply c2.
+  apply c2.
+  apply c2.
+  apply c1.
+Qed.
+
+Theorem r_2_list_1_0:
+  R 2 [1,0].
+Proof.
+  apply c2.
+  apply c2.
+  apply c1.
+Qed.
