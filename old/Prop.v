@@ -617,11 +617,64 @@ Qed.
 
 Inductive subseq : list nat -> list nat -> Prop :=
 | subseq_c1 : forall l, subseq [] l
-| subseq_c2 : forall sl l n m, subseq (n::sl) (m::l) -> subseq (n::sl) l
-| subseq_c3 : forall sl l n, subseq (n::sl) (n::l) -> subseq sl l.
+| subseq_c2 : forall sl l n m, subseq (n::sl) l -> subseq (n::sl) (m::l)
+| subseq_c3 : forall sl l n, subseq sl l -> subseq (n::sl) (n::l).
 
+Check subseq.
+Check (subseq [1,2,3] [1,2,3]).
+Check subseq_c3.
 
+Example subseq_ex1:
+  subseq [] [1,2,3].
+Proof.
+  apply subseq_c1.
+Qed.
 
+Example subseq_ex2:
+  subseq [1] [1,2,3].
+Proof.
+  apply subseq_c3.
+  apply subseq_c1.
+Qed.
+
+Example subseq_ex3:
+  subseq [1,2,3] [1,2,3].
+Proof.
+  apply subseq_c3.
+  apply subseq_c3.
+  apply subseq_c3.
+  apply subseq_c1.
+Qed.
+
+Example subseq_ex4:
+  subseq [1,2,3] [1,2,7,3].
+Proof.
+  apply subseq_c3.
+  apply subseq_c3.
+  apply subseq_c2.
+  apply subseq_c3.
+  apply subseq_c1.
+Qed.
+
+Example subseq_ex5:
+  subseq [1,2,3] [5,6,1,9,9,2,7,3,8].
+Proof.
+  apply subseq_c2.
+  apply subseq_c2.
+  apply subseq_c3.
+  apply subseq_c2.
+  apply subseq_c2.
+  apply subseq_c3.
+  apply subseq_c2.
+  apply subseq_c3.
+  apply subseq_c1.
+Qed.
+
+Theorem subseq_involutive:
+  forall s1 s2:list nat,  s1 s2 -> subseq s1 s2.
+Proof.
+  
+  
 Module Foo_Ind_principle.
   Inductive foo (X: Set) (Y: Set) : Set :=
   | foo1 : X -> foo X Y
@@ -630,33 +683,36 @@ Module Foo_Ind_principle.
   Check foo_ind.
 End Foo_Ind_principle.
 
-Inductive R : nat -> list nat -> Prop :=
-| c1 : R 0 []
-| c2 : forall n l, R n l -> R (S n) (n :: l)
-| c3 : forall n l, R (S n) l -> R n l.
+Module R.
 
-Check R.
-Check (R 1 [1,2,1,0]).
-Check (R 2 [1,0]).
-Check (R 6 [3,2,1,0]).
+  Inductive R : nat -> list nat -> Prop :=
+  | c1 : R 0 []
+  | c2 : forall n l, R n l -> R (S n) (n :: l)
+  | c3 : forall n l, R (S n) l -> R n l.
 
-Theorem r_1_list_1_2_1_0:
-  R 1 [1,2,1,0].
-Proof.
-  apply c3.
-  apply c2.
-  apply c3.
-  apply c3.
-  apply c2.
-  apply c2.
-  apply c2.
-  apply c1.
-Qed.
+  Check R.
+  Check (R 1 [1,2,1,0]).
+  Check (R 2 [1,0]).
+  Check (R 6 [3,2,1,0]).
 
-Theorem r_2_list_1_0:
-  R 2 [1,0].
-Proof.
-  apply c2.
-  apply c2.
-  apply c1.
-Qed.
+  Theorem r_1_list_1_2_1_0:
+    R 1 [1,2,1,0].
+  Proof.
+    apply c3.
+    apply c2.
+    apply c3.
+    apply c3.
+    apply c2.
+    apply c2.
+    apply c2.
+    apply c1.
+  Qed.
+
+  Theorem r_2_list_1_0:
+    R 2 [1,0].
+  Proof.
+    apply c2.
+    apply c2.
+    apply c1.
+  Qed.
+End R.
